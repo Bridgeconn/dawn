@@ -1,9 +1,9 @@
 import { View, Text, StyleSheet } from 'react-native';
 
-export default function HomeScreen() {
+export default function MenuItem() {
   return (
     <View style={styles.container}>
-      <Text>user name</Text>
+      <Text>Menu</Text>
     </View>
   );
 }

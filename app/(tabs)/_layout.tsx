@@ -16,22 +16,48 @@ export default function TabLayout() {
       }}>
       <Tabs.Screen
         name="index"
+        options={{ title: 'User',
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon name={focused ? 'person' : 'person-outline'} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="home"
         options={{
-          title: 'OBS',
+          title: 'Home',
           tabBarIcon: ({ color, focused }) => (
             <TabBarIcon name={focused ? 'home' : 'home-outline'} color={color} />
           ),
         }}
       />
-      {/* <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color, focused }) => (
-            <TabBarIcon name={focused ? 'code-slash' : 'code-slash-outline'} color={color} />
-          ),
-        }}
-      /> */}
+      <Tabs.Screen
+      name="text"
+      options={{
+        title: 'Text',
+        tabBarIcon: ({ color, focused }) => (
+          <TabBarIcon name={focused ? 'keypad' : 'keypad-outline'} color={color} />
+        ),
+      }}
+    />
+    <Tabs.Screen
+      name="audio"
+      options={{
+        title: 'Audio',
+        tabBarIcon: ({ color, focused }) => (
+          <TabBarIcon name={focused ? 'musical-notes' : 'musical-notes'} color={color} />
+        ),
+      }}
+    />
+     <Tabs.Screen
+      name="menu"
+      options={{
+        title: 'Menu',
+        tabBarIcon: ({ color, focused }) => (
+          <TabBarIcon name={focused ? 'menu' : 'menu-outline'} color={color} />
+        ),
+      }}
+    />
     </Tabs>
   );
 }
