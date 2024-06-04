@@ -56,6 +56,7 @@ export default function TextBox() {
       return { title, story, end, error };
     };
   let jsonLen=jsonData?jsonData?.story?.length:0
+  console.log(jsonData)
   return (
   <View style={styles.container2}>
     <View style={styles.container}>
