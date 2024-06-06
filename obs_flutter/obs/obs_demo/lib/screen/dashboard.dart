@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:obs_demo/editortext.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -65,19 +66,8 @@ class _DashboardState extends State<Dashboard> {
                   children: [
                     Expanded(
                       flex:
-                          3, // Increase this flex value to allocate more space
+                          2, // Increase this flex value to allocate more space
                       child: GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => StoryPage(
-                                title: jsonData[rowIndex]['title'],
-                                rowIndex: rowIndex,
-                              ),
-                            ),
-                          );
-                        },
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -94,7 +84,35 @@ class _DashboardState extends State<Dashboard> {
                       ),
                     ),
                     Expanded(
-                      flex: 2,
+                      flex: 1,
+                      child: GestureDetector(
+                        onTap: () async {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => EditorTextLayout(
+                                rowIndex: rowIndex,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Open',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      flex: 1,
                       child: GestureDetector(
                         onTap: () async {
                           Navigator.push(
