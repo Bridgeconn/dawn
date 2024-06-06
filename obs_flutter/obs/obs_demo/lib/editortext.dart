@@ -34,6 +34,8 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
 
   @override
   Widget build(BuildContext context) {
+    String text =
+        storyDatas[storyIndex]['story'][paraIndex]['url'].split('/').last;
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -43,15 +45,14 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
         child: storyDatas.isEmpty
             ? CircularProgressIndicator()
             : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
+                    width: 400,
+                    height: 140,
                     padding: EdgeInsets.all(12), // Example padding
-                    alignment: Alignment.center,
                     decoration: BoxDecoration(
                         image: DecorationImage(
-                      image: NetworkImage(
-                          storyDatas[storyIndex]['story'][paraIndex]['url']),
+                      image: AssetImage('assets/obs-images/${text}'),
                       fit: BoxFit.cover,
                     )),
                     child: Container(
@@ -121,17 +122,23 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                     ],
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: TextField(
-                      controller: _controller,
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(),
-                        labelText: 'Enter your text',
-                        errorText:
-                            _errorMessage.isNotEmpty ? _errorMessage : null,
-                      ),
-                    ),
-                  ),
+                      padding: const EdgeInsets.all(4.0),
+                      child: SizedBox(
+                        width: 400,
+                        height: 110,
+                        child: TextField(
+                          controller: _controller,
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Enter your text',
+                            errorText:
+                                _errorMessage.isNotEmpty ? _errorMessage : null,
+                          ),
+                          maxLines:
+                              20, // Increases the height to accommodate up to 5 lines
+                          minLines: 10,
+                        ),
+                      )),
                 ],
               ),
       ),
