@@ -100,7 +100,7 @@ class _DashboardState extends State<Dashboard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'open',
+                              'Open',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.bold,

@@ -34,7 +34,6 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
 
   @override
   Widget build(BuildContext context) {
-    print(storyDatas[storyIndex]['story'][paraIndex]['url']);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
