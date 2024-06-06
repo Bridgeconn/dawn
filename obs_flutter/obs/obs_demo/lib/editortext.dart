@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:flutter/services.dart' show rootBundle;
 
 void main() {
   runApp(const EditorText());
@@ -51,69 +52,22 @@ class EditorTextLayout extends StatefulWidget {
 }
 
 class _EditorTextLayoutState extends State<EditorTextLayout> {
-  Map tempMap = Map();
-  List<Map<String, dynamic>> storyData = [];
-  Future<void> fetchdata() async {
-    final url =
-        'https://raw.githubusercontent.com/Bridgeconn/vachancontentrepository/master/obs/eng/content/01.md';
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final data = response.body;
-      final jsonData = parseMarkdownToJson(data);
-      setState(() {
-        tempMap = jsonData;
-      });
-      setState(() {
-        storyData = tempMap['story'];
-      });
-    } else {
-      print('Failed to load markdown data');
-    }
-  }
-
-  Map<String, dynamic> parseMarkdownToJson(String data) {
-    List<Map<String, dynamic>> story = [];
-    int id = 0;
-    final allLines = data.split(RegExp(r'\r\n|\n'));
-    String title = "";
-    String end = "";
-    String error = "";
-
-    try {
-      for (var line in allLines) {
-        if (line.isNotEmpty) {
-          if (line.startsWith('# ')) {
-            title = line.substring(2).trim();
-          } else if (line.startsWith('_')) {
-            end = line.substring(1, line.length - 1).trim();
-          } else if (line.startsWith('!')) {
-            id += 1;
-            final imgUrl = RegExp(r'\((.*)\)').firstMatch(line);
-            if (imgUrl != null) {
-              story.add({'id': id, 'url': imgUrl.group(1), 'text': ""});
-            }
-          } else {
-            if (story.isNotEmpty) {
-              story[id - 1]['text'] = line.trim();
-            }
-          }
-        }
-      }
-    } catch (e) {
-      error = "Error parsing OBS md file text";
-      title = "";
-      end = "";
-      story = [];
-    }
-
-    return {'title': title, 'story': story, 'end': end, 'error': error};
+  List<Map<String, dynamic>> storyDatas = [];
+  int storyIndex = 0;
+  int paraIndex = 0;
+  final TextEditingController _controller = TextEditingController();
+  String _errorMessage = "";
+  Future<void> fetchJson() async {
+    final jsonString = await rootBundle.loadString('store/OBSTextData.json');
+    setState(() {
+      storyDatas = json.decode(jsonString).cast<Map<String, dynamic>>();
+    });
   }
 
   @override
   void initState() {
     // TODO: implement initState
-    fetchdata();
+    fetchJson();
     super.initState();
   }
 
@@ -134,14 +88,90 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
         // Here we take the value from the EditorTextLayout object that was created by
         // the App.build method, and use it to set our appbar title.
       ),
-      body: ListView.builder(
-        itemCount: storyData.length,
-        itemBuilder: (context, index) {
-          return ListTile(
-            title: Text(storyData[index]['text']),
-            subtitle: Image.network(storyData[index]['url']),
-          );
-        },
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Adding some space between button and text
+            Padding(
+              padding: const EdgeInsets.all(10.0), // Padding on all sides
+              child: Text(
+                storyDatas[storyIndex]['story'][paraIndex]['text'],
+                style: TextStyle(
+                  fontSize: 14.5,
+                ),
+              ),
+            ),
+            // Adding some space between icon and text
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                storyIndex != 0
+                    ? IconButton(
+                        icon: Icon(Icons.skip_previous),
+                        iconSize: 35, // Adjust the size of the icon as needed
+                        onPressed: () {
+                          int num = storyIndex;
+                          num == 0 ? 0 : num = num - 1;
+                          setState(() {
+                            storyIndex = num;
+                          });
+                        },
+                      )
+                    : Text(""),
+                paraIndex != 0
+                    ? IconButton(
+                        icon: Icon(Icons.arrow_left_sharp),
+                        iconSize: 35, // Adjust the size of the icon as needed
+                        onPressed: () {
+                          // Action when button is pressed
+                          int num = paraIndex;
+                          num == 0 ? 0 : num = num - 1;
+                          setState(() {
+                            paraIndex = num;
+                          });
+                        },
+                      )
+                    : Text(""),
+                Text(storyDatas[storyIndex]['storyId'].toString()),
+                Text(":"),
+                Text(storyDatas[storyIndex]['story'][paraIndex]['id']
+                    .toString()),
+                paraIndex != storyDatas[storyIndex]['story'].length - 1
+                    ? IconButton(
+                        icon: Icon(Icons.arrow_right_sharp),
+                        iconSize: 35, // Adjust the size of the icon as needed
+                        onPressed: () {
+                          // Action when button is pressed
+                          setState(() {
+                            paraIndex = paraIndex + 1;
+                          });
+                        },
+                      )
+                    : Text(''),
+                storyIndex != storyDatas.length - 1
+                    ? IconButton(
+                        icon: Icon(Icons.skip_next),
+                        iconSize: 35, // Adjust the size of the icon as needed
+                        onPressed: () {
+                          setState(() {
+                            storyIndex = storyIndex + 1;
+                          });
+                        },
+                      )
+                    : Text(""),
+              ],
+            ),
+            TextField(
+              controller: _controller,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Enter your text',
+                errorText: _errorMessage,
+              ),
+            )
+          ],
+        ),
       ),
     );
   }
