@@ -64,6 +64,7 @@ flutter:
     - assets/OBSTextData.json
     - assets/NavItems.json
     - assets/OBSData.json
+    - assets/images/
   #   - images/a_dot_burr.jpeg
   #   - images/a_dot_ham.jpeg
   # An image asset can refer to one or more resolution-specific "variants", see
