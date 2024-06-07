@@ -17,6 +17,7 @@ class _CreateUserPageState extends State<CreateUserPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text('OBS Translator'),
         centerTitle: true,
         automaticallyImplyLeading: false, // Remove back button

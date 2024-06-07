@@ -51,10 +51,10 @@ class _BottomNavigationBarExampleState
       ),
       Dashboard(), // Replace this with your dashboard page widget
       EditorTextLayout(rowIndex: 0),
-      Text(
-        'Audio',
-        style: optionStyle,
-      ),
+      // Text(
+      //   'Audio',
+      //   style: optionStyle,
+      // ),
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -70,9 +70,19 @@ class _BottomNavigationBarExampleState
             'Change Source Language',
             style: optionStyle,
           ),
-          Text(
-            'Close',
-            style: optionStyle,
+          GestureDetector(
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                    builder: (context) =>
+                        BottomNavigationBarExample(widget.userProfile)),
+              );
+            },
+            child: Text(
+              'Close',
+              style: optionStyle,
+            ),
           ),
           SizedBox(height: 10),
         ],
@@ -101,23 +111,23 @@ class _BottomNavigationBarExampleState
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'Profile',
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: 'Home',
+            label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.text_snippet),
-            label: 'Text',
+            icon: Icon(Icons.create),
+            label: '',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.audiotrack_outlined),
-            label: 'Audio',
-          ),
+          // BottomNavigationBarItem(
+          //   icon: Icon(Icons.audiotrack_outlined),
+          //   label: 'Audio',
+          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.menu),
-            label: 'Menu',
+            label: '',
           ),
         ],
         currentIndex: _selectedIndex,
