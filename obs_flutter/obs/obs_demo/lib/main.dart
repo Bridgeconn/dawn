@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'profile.dart';
-import 'bottommenu.dart';
+// import 'bottommenu.dart';
 
 
 
@@ -14,10 +14,12 @@ class BottomNavigationBarExampleApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: const BottomNavigationBarExample(),
-      routes: {
-        ProfileScreen.routeName: (context) => const ProfileScreen(),
-      },
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      
     );
   }
 }

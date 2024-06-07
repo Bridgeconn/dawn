@@ -50,17 +50,17 @@ class _BottomNavigationBarExampleState
             'Open',
             style: optionStyle,
           ),
-          SizedBox(height: 10),
+          // SizedBox(height: 10),
           Text(
             'Export',
             style: optionStyle,
           ),
-          SizedBox(height: 10),
+          // SizedBox(height: 10),
           Text(
             'Change Source Language',
             style: optionStyle,
           ),
-          SizedBox(height: 10),
+          // SizedBox(height: 10),
           Text(
             'Close',
             style: optionStyle,
@@ -120,7 +120,7 @@ class _BottomNavigationBarExampleState
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.menu),
-            label: 'menus',
+            label: 'Menu',
           ),
         ],
         currentIndex: _selectedIndex,
