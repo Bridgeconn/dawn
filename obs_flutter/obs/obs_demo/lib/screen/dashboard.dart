@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:obs_demo/editortext.dart';
+import 'package:path_provider/path_provider.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -142,7 +144,6 @@ class _DashboardState extends State<Dashboard> {
                               MaterialPageRoute(
                                 builder: (context) => PreviewPage(
                                   rowIndex: rowIndex,
-                                  previewData: jsonData[rowIndex],
                                 ),
                               ),
                             );
@@ -208,19 +209,45 @@ class StoryPage extends StatelessWidget {
   }
 }
 
-class PreviewPage extends StatelessWidget {
-  final int rowIndex;
-  final Map<String, dynamic> previewData;
+class PreviewPage extends StatefulWidget {
+  const PreviewPage({required this.rowIndex});
 
-  const PreviewPage({
-    required this.rowIndex,
-    required this.previewData,
-    Key? key,
-  }) : super(key: key);
+  final int rowIndex;
+
+  @override
+  _PreviewPageState createState() => _PreviewPageState();
+}
+
+class _PreviewPageState extends State<PreviewPage> {
+  Map<String, dynamic> story = {};
+  Future<void> readJsonToFile() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File(
+        '${directory.path}/${widget.rowIndex}.json'); // Replace with your desired filename
+    try {
+      final jsonData = await file.readAsString();
+      final data = jsonDecode(jsonData) as Map<String, dynamic>;
+      setState(() {
+        story = data;
+      });
+    } on FileSystemException {
+      // Handle the case where the file doesn't exist or can't be read
+    } catch (e) {
+      // Handle other exceptions
+      print("Error reading JSON file: $e");
+      rethrow; // Re-throw for further handling if needed
+    }
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    readJsonToFile();
+  }
 
   @override
   Widget build(BuildContext context) {
-    List<dynamic> storyList = previewData['story'];
     return Scaffold(
       appBar: AppBar(
         title: const Text('Preview'),
@@ -231,13 +258,13 @@ class PreviewPage extends StatelessWidget {
           children: [
             SizedBox(height: 20),
             Text(
-              '${previewData['title']}',
+              '${story['title']}',
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             Expanded(
               child: ListView(
-                children: storyList
+                children: story['story']
                     .map<Widget>((item) => StoryItem(item: item))
                     .toList(),
               ),
@@ -256,6 +283,7 @@ class StoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String text = item['url'].split('/').last;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: Container(
@@ -272,7 +300,7 @@ class StoryItem extends StatelessWidget {
               Expanded(
                 flex: 1, // Adjust flex value as needed
                 child: Image.asset(
-                  item['url'], // Use the local asset path
+                  'assets/images/' + text, // Use the local asset path
                   width: 150,
                   height: 80,
                   fit: BoxFit.cover,
