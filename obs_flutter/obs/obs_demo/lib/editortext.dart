@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:convert';
-import 'package:flutter/services.dart' show rootBundle;
+// import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 
 class EditorTextLayout extends StatefulWidget {
   const EditorTextLayout({required this.rowIndex});
@@ -13,12 +16,14 @@ class EditorTextLayout extends StatefulWidget {
 
 class _EditorTextLayoutState extends State<EditorTextLayout> {
   List<Map<String, dynamic>> storyDatas = [];
+  Map<String, dynamic> story = {};
+
   late int storyIndex;
   int paraIndex = 0;
   final TextEditingController _controller = TextEditingController();
   String _errorMessage = "";
-  String _textFieldValue = '';
-  Future<void> fetchJson() async {
+  String _textFieldValue = "";
+  Future<void> fetchStoryText() async {
     final jsonString = await rootBundle.loadString('assets/OBSTextData.json');
     setState(() {
       storyDatas = json.decode(jsonString).cast<Map<String, dynamic>>();
@@ -26,9 +31,54 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
     });
   }
 
+  Future<void> fetchJson() async {
+    Map<String, dynamic> data = await readJsonToFile();
+    if (data.isEmpty) {
+      final obsJson = await rootBundle.loadString('assets/OBSData.json');
+      var obsData = json.decode(obsJson).cast<Map<String, dynamic>>();
+      writeJsonToFile(obsData[storyIndex]);
+      setState(() {
+        story = obsData[storyIndex];
+      });
+    } else {
+      setState(() {
+        story = data;
+      });
+    }
+  }
+
+  Future<void> writeJsonToFile(Map<String, dynamic> data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File(
+        '${directory.path}/${storyIndex}.json'); // Replace with your desired filename
+    final jsonData = jsonEncode(data);
+    print(jsonData);
+    await file.writeAsString(jsonData);
+  }
+
+  Future<Map<String, dynamic>> readJsonToFile() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File(
+        '${directory.path}/${storyIndex}.json'); // Replace with your desired filename
+    try {
+      final jsonData = await file.readAsString();
+      final data = jsonDecode(jsonData) as Map<String, dynamic>;
+      _controller.text = data['story'][0]['text'];
+      return data;
+    } on FileSystemException {
+      // Handle the case where the file doesn't exist or can't be read
+      return <String, dynamic>{}; // Return an empty map or handle differently
+    } catch (e) {
+      // Handle other exceptions
+      print("Error reading JSON file: $e");
+      rethrow; // Re-throw for further handling if needed
+    }
+  }
+
   @override
   void initState() {
     super.initState();
+    fetchStoryText();
     fetchJson();
   }
 
@@ -48,7 +98,6 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
 
     String text =
         storyDatas[storyIndex]['story'][paraIndex]['url'].split('/').last;
-    print(_textFieldValue);
     return GestureDetector(
       onTap: () {
         FocusScope.of(context)
@@ -102,6 +151,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                                         storyIndex > 0 ? storyIndex - 1 : 0;
                                     paraIndex = 0;
                                   });
+                                  fetchJson();
                                 },
                               )
                             : IconButton(
@@ -120,6 +170,8 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                                     paraIndex =
                                         paraIndex > 0 ? paraIndex - 1 : 0;
                                   });
+                                  _controller.text =
+                                      story['story'][paraIndex]['text'];
                                 },
                               )
                             : IconButton(
@@ -141,6 +193,8 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                                   setState(() {
                                     paraIndex = paraIndex + 1;
                                   });
+                                  _controller.text =
+                                      story['story'][paraIndex]['text'];
                                 },
                               )
                             : IconButton(
@@ -158,6 +212,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                                     storyIndex = storyIndex + 1;
                                     paraIndex = 0;
                                   });
+                                  fetchJson();
                                 },
                               )
                             : IconButton(
@@ -179,9 +234,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                             setState(() {
                               _textFieldValue = value;
                             });
-                          },
-                          onSubmitted: (value) {
-                            _saveData(value);
+                            saveData(_textFieldValue);
                           },
                           decoration: InputDecoration(
                             border: OutlineInputBorder(),
@@ -204,9 +257,10 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
     );
   }
 
-  void _saveData(String value) {
-    // Here you can save the data to a database, file, or any other storage mechanism
+  void saveData(String value) async {
+    story['story'][paraIndex]['text'] = value;
+    writeJsonToFile(story);
     print('Data saved: $value');
-    // You can perform saving operations here, like storing to a database, file, etc.
+// You can perform saving operations here, like storing to a database, file, etc.
   }
 }
