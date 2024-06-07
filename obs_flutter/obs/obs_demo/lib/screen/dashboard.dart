@@ -88,7 +88,7 @@ class _DashboardState extends State<Dashboard> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        flex: 3,
+                        flex: 4,
                         child: GestureDetector(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -121,14 +121,18 @@ class _DashboardState extends State<Dashboard> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Open',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.grey[700],
-                                ),
+                              Icon(
+                                Icons.folder,
+                                color: Colors.orange[400],
                               ),
+                              // Text(
+                              //   'Open',
+                              //   style: TextStyle(
+                              //     fontSize: 14,
+                              //     fontWeight: FontWeight.bold,
+                              //     color: Colors.grey[700],
+                              //   ),
+                              // ),
                             ],
                           ),
                         ),
@@ -152,7 +156,7 @@ class _DashboardState extends State<Dashboard> {
                             children: [
                               Icon(
                                 Icons.remove_red_eye_sharp,
-                                color: Colors.green[300],
+                                // color: Colors.green[300],
                               ),
                             ],
                           ),
