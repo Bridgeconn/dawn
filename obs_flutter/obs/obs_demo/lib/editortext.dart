@@ -67,7 +67,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/obs-images/$text'),
+                  image: AssetImage('assets/images/$text'),
                   fit: BoxFit.cover,
                 ),
               ),
