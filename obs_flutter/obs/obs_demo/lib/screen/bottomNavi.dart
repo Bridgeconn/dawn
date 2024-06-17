@@ -102,12 +102,14 @@ class _BottomNavigationBarExampleState
       appBar: AppBar(
         title: const Text('OBS Translator'),
         centerTitle: true,
+        backgroundColor: Colors.white, // Set app bar color to white
       ),
       body: Center(
         child: _widgetOptions(context, widget.userProfile)
             .elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white, // Set bottom nav bar color to white
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.person),

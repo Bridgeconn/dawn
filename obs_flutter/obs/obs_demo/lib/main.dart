@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:obs_demo/CreateUserPage.dart';
 import 'package:obs_demo/screen/bottomNavi.dart';
+import 'package:obs_demo/screen/dashboard.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,6 +21,7 @@ class MyApp extends StatelessWidget {
         ),
         home: CreateUserPage() // Navigate to UserProfilePage directly
         // home: BottomNavigationBarExample(),
+        // home: Dashboard(),
         );
   }
 }
