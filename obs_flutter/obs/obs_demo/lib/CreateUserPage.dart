@@ -1,5 +1,3 @@
-// create_user_page.dart
-
 import 'package:flutter/material.dart';
 import 'package:obs_demo/screen/bottomNavi.dart';
 import 'user_profile.dart'; // Import the UserProfile class
@@ -61,8 +59,12 @@ class _CreateUserPageState extends State<CreateUserPage> {
                 onPressed: _userName != null
                     ? () {
                         // Create a UserProfile instance
-                        UserProfile userProfile =
-                            UserProfile(_userName!, _selectedLanguage);
+                        UserProfile userProfile = UserProfile(
+                          userName: _userName!,
+                          language: _selectedLanguage,
+                          stories: [],
+                        );
+
                         // Navigate to the bottom navigation bar example page with the user profile data
                         Navigator.pushReplacement(
                           context,

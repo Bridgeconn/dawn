@@ -29,6 +29,12 @@ class _BottomNavigationBarExampleState
   static const TextStyle optionStyle =
       TextStyle(fontSize: 15, fontWeight: FontWeight.bold);
 
+  void onUpdateTextAvailability(bool hasText) {
+    // Implement your logic here based on text availability update
+    print('Text availability updated: $hasText');
+    // You can update state or perform any other actions based on this callback
+  }
+
   List<Widget> _widgetOptions(BuildContext context, UserProfile userProfile) {
     return [
       Column(
@@ -40,7 +46,7 @@ class _BottomNavigationBarExampleState
           ),
           SizedBox(height: 20),
           Text(
-            '${userProfile.name}',
+            '${userProfile.userName}',
             style: optionStyle,
           ),
           Text(
@@ -50,7 +56,10 @@ class _BottomNavigationBarExampleState
         ],
       ),
       Dashboard(), // Replace this with your dashboard page widget
-      EditorTextLayout(rowIndex: 0),
+      EditorTextLayout(
+        rowIndex: 0,
+        onUpdateTextAvailability: onUpdateTextAvailability,
+      ),
       // Text(
       //   'Audio',
       //   style: optionStyle,
