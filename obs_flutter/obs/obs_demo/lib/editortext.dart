@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:obs_demo/audio_bubble.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audio_waveforms/audio_waveforms.dart';
 
@@ -23,12 +25,14 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
   final TextEditingController _controller = TextEditingController();
   String _errorMessage = "";
   String _textFieldValue = "";
+  bool isRecording = false;
+  bool isPlaying = false;
+  int currentPositionInSeconds = 0;
 
   late final RecorderController recorderController;
   late final PlayerController playerController;
 
   String? _recordedFilePath;
-  String? _audioFilePath;
 
   Future<void> fetchStoryText() async {
     final jsonString = await rootBundle.loadString('assets/OBSTextData.json');
@@ -88,6 +92,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
     fetchStoryText();
     fetchJson();
     _initialiseControllers();
+    _preparePaths();
   }
 
   void _initialiseControllers() async {
@@ -109,7 +114,20 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
     int paraId = storyDatas[storyIndex]['story'][paraIndex]['id'];
 
     _recordedFilePath = '${directory.path}/OBS_${storyId}_$paraId.wav';
-    _audioFilePath = '${directory.path}/OBS_${storyId}_$paraId.wav';
+
+    if (_recordedFilePath != null) {
+      final file = File(_recordedFilePath!);
+      if (await file.exists()) {
+        await playerController.preparePlayer(
+          path: _recordedFilePath!,
+          shouldExtractWaveform: true,
+        );
+      } else {
+        print('File does not exist: $_recordedFilePath');
+      }
+    } else {
+      print('Recorded file path is null.');
+    }
   }
 
   void _startRecording() async {
@@ -121,6 +139,9 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
 
     if (story['story'][paraIndex]['audio'] == null) {
       try {
+        setState(() {
+          isRecording = true; // Start recording, update state
+        });
         await recorderController.record(path: _recordedFilePath!);
       } catch (e) {
         print('Error recording: $e');
@@ -153,6 +174,9 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
 
   Future<void> _startNewRecording() async {
     try {
+      setState(() {
+        isRecording = true; // Start new recording, update state
+      });
       if (_recordedFilePath != null) {
         final file = File(_recordedFilePath!);
         if (await file.exists()) {
@@ -176,6 +200,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
       setState(() {
         _recordedFilePath = path;
         story['story'][paraIndex]['audio'] = _recordedFilePath;
+        isRecording = false;
       });
       writeJsonToFile(story);
     } catch (e) {
@@ -183,16 +208,49 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
     }
   }
 
-  Future<void> _startPlayback() async {
-    if (_audioFilePath != null) {
-      try {
-        await playerController.preparePlayer(
-          path: _audioFilePath!,
-          shouldExtractWaveform: true,
-        );
-        await playerController.startPlayer();
-      } catch (e) {
-        print('Error starting playback: $e');
+  void _startPlayback() async {
+    String? playbackPath = _recordedFilePath;
+
+    if (playbackPath != null) {
+      final file = File(playbackPath);
+      if (await file.exists()) {
+        try {
+          await playerController.preparePlayer(
+            path: playbackPath,
+            shouldExtractWaveform: true,
+          );
+
+          // Start playback
+          await playerController.startPlayer();
+
+          // Update playback state
+          setState(() {
+            isPlaying = true;
+          });
+
+          playerController.onPlayerStateChanged.listen((state) {
+            if (state == PlayerState.stopped) {
+              _stopPlayback(); // Stop playback when it completes
+            }
+          });
+          // Manually track playback position using a Timer
+          Timer? timer;
+          timer = Timer.periodic(Duration(seconds: 1), (timer) {
+            setState(() {
+              currentPositionInSeconds++;
+            });
+
+            // Example: Stop playback after 10 seconds (adjust as needed)
+            if (currentPositionInSeconds >= 2) {
+              _stopPlayback();
+              timer?.cancel();
+            }
+          });
+        } catch (e) {
+          print('Error starting playback: $e');
+        }
+      } else {
+        print('Audio file does not exist at path: $playbackPath');
       }
     } else {
       print('Audio file path is null. Cannot start playback.');
@@ -202,6 +260,10 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
   void _stopPlayback() async {
     try {
       await playerController.stopPlayer();
+      setState(() {
+        isPlaying = false;
+        currentPositionInSeconds = 0; // Reset position on stop
+      });
     } catch (e) {
       print('Error stopping playback: $e');
     }
@@ -325,6 +387,12 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                                 });
                                 _controller.text =
                                     story['story'][paraIndex]['text'];
+                                _recordedFilePath =
+                                    story['story'][paraIndex]['audio'];
+                                _preparePaths(); // Prepare audio path for playback
+                                if (_recordedFilePath == null) {
+                                  _startRecording(); // Start recording if audio path is null
+                                }
                               },
                             )
                           : IconButton(
@@ -377,71 +445,46 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                       ),
                     ),
                   ),
-                  _recordedFilePath != null
-                      ? AudioWaveforms(
-                          enableGesture: true,
-                          size: Size(
-                              MediaQuery.of(context).size.width / 1.07, 80),
-                          recorderController: recorderController,
-                          waveStyle: WaveStyle(
-                            waveColor: Colors.white,
-                            extendWaveform: true,
-                            showMiddleLine: true,
-                          ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12.0),
-                            color: Color.fromARGB(255, 114, 106, 136),
-                          ),
-                        )
-                      : SizedBox.shrink(),
-                  _audioFilePath != null
-                      ? AudioFileWaveforms(
-                          size: Size(MediaQuery.of(context).size.width, 10),
-                          playerController: playerController,
-                          playerWaveStyle: const PlayerWaveStyle(
-                            scaleFactor: 0.8,
-                            fixedWaveColor: Colors.white30,
-                            liveWaveColor: Colors.white,
-                            waveCap: StrokeCap.butt,
-                          ),
-                        )
-                      : SizedBox.shrink(),
+                  AudioBubble(
+                    recordedFilePath: _recordedFilePath,
+                    recorderController: recorderController,
+                    playerController: playerController,
+                    currentPositionInSeconds: currentPositionInSeconds,
+                  ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       IconButton(
                         icon: Icon(Icons.mic),
                         iconSize: 50,
-                        onPressed: _startRecording,
+                        onPressed: isRecording ? null : _startRecording,
                       ),
                       IconButton(
                         icon: Icon(Icons.stop),
                         iconSize: 50,
-                        onPressed: _stopRecording,
+                        onPressed: isRecording ? _stopRecording : null,
                       ),
                       SizedBox(width: 20),
-                      // IconButton(
-                      //   icon: Icon(Icons.play_arrow),
-                      //   iconSize: 50,
-                      //   onPressed: () async {
-                      //     if (playerController.playerState ==
-                      //         PlayerState.playing) {
-                      //       _stopPlayback();
-                      //     } else {
-                      //       await _startPlayback();
-                      //     }
-                      //   },
-                      // ),
-                      IconButton(
-                        icon: Icon(Icons.play_arrow),
-                        iconSize: 50,
-                        onPressed: _startPlayback,
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.stop_circle),
-                        iconSize: 50,
-                        onPressed: _stopPlayback,
-                      ),
+                      if (!isPlaying)
+                        IconButton(
+                          icon: Icon(Icons.play_arrow),
+                          iconSize: 50,
+                          onPressed: (_recordedFilePath != null &&
+                                  _recordedFilePath!.isNotEmpty)
+                              ? _startPlayback
+                              : null,
+                          color: (_recordedFilePath != null &&
+                                  _recordedFilePath!.isNotEmpty)
+                              ? Colors.green
+                              : Colors.grey,
+                          disabledColor: Colors.grey,
+                        ),
+                      if (isPlaying)
+                        IconButton(
+                          icon: Icon(Icons.stop_circle),
+                          iconSize: 50,
+                          onPressed: _stopPlayback,
+                        ),
                       // if (playerController.playerState == PlayerState.playing)
                       //   const Text('Playing...'),
                     ],
@@ -457,7 +500,11 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
 
   void saveData(String value) async {
     story['story'][paraIndex]['text'] = value;
-    story['story'][paraIndex]['audio'] = _recordedFilePath;
+    if (_recordedFilePath != null) {
+      story['story'][paraIndex]['audio'] = _recordedFilePath;
+    }
+
+    // Save updated data to JSON file
     writeJsonToFile(story);
 
     print('Data saved: $value');
