@@ -60,10 +60,6 @@ class _BottomNavigationBarExampleState
         rowIndex: 0,
         onUpdateTextAvailability: onUpdateTextAvailability,
       ),
-      // Text(
-      //   'Audio',
-      //   style: optionStyle,
-      // ),
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -108,10 +104,6 @@ class _BottomNavigationBarExampleState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('OBS Translator'),
-        centerTitle: true,
-      ),
       body: Center(
         child: _widgetOptions(context, widget.userProfile)
             .elementAt(_selectedIndex),
@@ -130,10 +122,6 @@ class _BottomNavigationBarExampleState
             icon: Icon(Icons.create),
             label: '',
           ),
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.audiotrack_outlined),
-          //   label: 'Audio',
-          // ),
           BottomNavigationBarItem(
             icon: Icon(Icons.menu),
             label: '',

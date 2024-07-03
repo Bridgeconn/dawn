@@ -1,26 +1,42 @@
 import 'package:flutter/material.dart';
-import 'package:obs_demo/CreateUserPage.dart';
-import 'package:obs_demo/screen/bottomNavi.dart';
-import 'package:obs_demo/screen/dashboard.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'CreateUserPage.dart';
+import 'screen/bottomNavi.dart';
+import 'user_profile.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences prefs = await SharedPreferences.getInstance();
+  String? userName = prefs.getString('userName');
+  String? language = prefs.getString('language');
+
+  runApp(MyApp(
+    userName: userName,
+    language: language,
+  ));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final String? userName;
+  final String? language;
+
+  MyApp({this.userName, this.language});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Flutter Demo',
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-          useMaterial3: true,
-        ),
-        home: CreateUserPage() // Navigate to UserProfilePage directly
-        // home: Dashboard(),
-        );
+      debugShowCheckedModeBanner: false,
+      title: 'Flutter Demo',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: userName != null && language != null
+          ? BottomNavigationBarExample(
+              UserProfile(
+                  userName: userName!, language: language!, stories: []),
+            )
+          : CreateUserPage(),
+    );
   }
 }

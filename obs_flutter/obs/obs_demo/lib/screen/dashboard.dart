@@ -92,6 +92,10 @@ class _DashboardState extends State<Dashboard> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('OBS Translator'),
+        centerTitle: true,
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: loadData(), // Reference to the async function
         builder: (context, snapshot) {
