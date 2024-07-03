@@ -1,14 +1,17 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'dart:convert';
-// import 'package:flutter/services.dart' show rootBundle;
 import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 
 class EditorTextLayout extends StatefulWidget {
-  const EditorTextLayout({required this.rowIndex});
+  const EditorTextLayout({
+    required this.rowIndex,
+    required this.onUpdateTextAvailability,
+  });
 
   final int rowIndex;
+  final Function(bool hasText) onUpdateTextAvailability;
 
   @override
   _EditorTextLayoutState createState() => _EditorTextLayoutState();
@@ -24,6 +27,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
   final TextEditingController _controller = TextEditingController();
   String _errorMessage = "";
   String _textFieldValue = "";
+
   Future<void> fetchStoryText() async {
     final jsonString = await rootBundle.loadString('assets/OBSTextData.json');
     setState(() {
@@ -50,10 +54,8 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
 
   Future<void> writeJsonToFile(Map<String, dynamic> data) async {
     final directory = await getApplicationDocumentsDirectory();
-    final file = File(
-        '${directory.path}/${storyIndex}.json'); // Replace with your desired filename
+    final file = File('${directory.path}/${storyIndex}.json');
     final jsonData = jsonEncode(data);
-    print(jsonData);
     await file.writeAsString(jsonData);
   }
 
@@ -68,12 +70,10 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
       data['story'][0]['isEmpty'] = false;
       return data;
     } on FileSystemException {
-      // Handle the case where the file doesn't exist or can't be read
-      return <String, dynamic>{}; // Return an empty map or handle differently
+      return <String, dynamic>{};
     } catch (e) {
-      // Handle other exceptions
       print("Error reading JSON file: $e");
-      rethrow; // Re-throw for further handling if needed
+      rethrow;
     }
   }
 
@@ -112,8 +112,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
         storyDatas[storyIndex]['story'][paraIndex]['url'].split('/').last;
     return GestureDetector(
       onTap: () {
-        FocusScope.of(context)
-            .unfocus(); // Close the keyboard when tapping outside
+        FocusScope.of(context).unfocus();
       },
       child: Scaffold(
         appBar: AppBar(
@@ -135,7 +134,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
               child: Container(
                 width: double.infinity,
                 height: 200,
-                padding: const EdgeInsets.all(8), // Example padding
+                padding: const EdgeInsets.all(8),
                 color: const Color(0xF0FDFDFF).withOpacity(0.9),
                 child: Text(
                   storyDatas[storyIndex]['story'][paraIndex]['text'],
@@ -143,7 +142,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                     fontSize: 14.5,
                     fontWeight: FontWeight.bold,
                   ),
-                ), // Example background color
+                ),
               ),
             ),
             Expanded(
@@ -304,40 +303,6 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                         ),
                       ),
                     ),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          if (story?['story']?[paraIndex]['text'].isEmpty) {
-                            // If the text field is empty
-                            story?['story'][paraIndex]?['isEmpty'] = true;
-                            _errorMessage = 'Text cannot be empty!';
-                          } else {
-                            // If the text field is not empty
-                            story?['story']?[paraIndex]['isEmpty'] = false;
-                            _errorMessage =
-                                ''; // Clear any previous error message
-                          }
-                        });
-                      },
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            // Change the background color based on whether the text field is empty or not
-                            if (story?['story']?[paraIndex]['isEmpty'] ??
-                                false) {
-                              // If the text field is empty
-                              return Colors.grey
-                                  .withOpacity(0.5); // Set to a gray color
-                            } else {
-                              // If the text field is not empty
-                              return Colors.blue; // Set to your desired color
-                            }
-                          },
-                        ),
-                      ),
-                      child: Text('Mark as Done'),
-                    ),
                   ],
                 ),
               ),
@@ -350,8 +315,10 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
 
   void saveData(String value) async {
     story['story'][paraIndex]['text'] = value;
+    story['story'][paraIndex]['isEmpty'] = value.isEmpty;
     writeJsonToFile(story);
+    widget.onUpdateTextAvailability(value.isNotEmpty);
     print('Data saved: $value');
-// You can perform saving operations here, like storing to a database, file, etc.
+    print(story['story'][paraIndex]);
   }
 }

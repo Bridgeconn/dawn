@@ -20,7 +20,6 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         home: CreateUserPage() // Navigate to UserProfilePage directly
-        // home: BottomNavigationBarExample(),
         // home: Dashboard(),
         );
   }
