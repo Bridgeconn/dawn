@@ -20,11 +20,13 @@ class EditorTextLayout extends StatefulWidget {
 class _EditorTextLayoutState extends State<EditorTextLayout> {
   List<Map<String, dynamic>> storyDatas = [];
   Map<String, dynamic> story = {};
+  bool isCompleted = false;
+  FocusNode _focusNode = FocusNode();
   late int storyIndex;
   int paraIndex = 0;
   final TextEditingController _controller = TextEditingController();
   String _errorMessage = "";
-  bool _isMarkedAsDone = false;
+  String _textFieldValue = "";
 
   Future<void> fetchStoryText() async {
     final jsonString = await rootBundle.loadString('assets/OBSTextData.json');
@@ -60,10 +62,12 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
   Future<Map<String, dynamic>> readJsonToFile() async {
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/${storyIndex}.json');
+    // Replace with your desired filename
     try {
       final jsonData = await file.readAsString();
       final data = jsonDecode(jsonData) as Map<String, dynamic>;
       _controller.text = data['story'][0]['text'];
+      data['story'][0]['isEmpty'] = false;
       return data;
     } on FileSystemException {
       return <String, dynamic>{};
@@ -78,6 +82,16 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
     super.initState();
     fetchStoryText();
     fetchJson();
+    _focusNode.addListener(() {
+      setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _focusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -191,7 +205,7 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                                     paraIndex = paraIndex + 1;
                                   });
                                   _controller.text =
-                                      story['story'][paraIndex]['text'];
+                                      story?['story']?[paraIndex]['text'];
                                 },
                               )
                             : IconButton(
@@ -225,51 +239,69 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
                       padding: const EdgeInsets.all(4.0),
                       child: SizedBox(
                         height: 200,
-                        child: TextField(
-                          controller: _controller,
-                          onChanged: (value) {
-                            setState(() {
-                              _isMarkedAsDone = false;
-                            });
-                            saveData(value);
-                          },
-                          decoration: InputDecoration(
-                            border: OutlineInputBorder(),
-                            labelText: 'Enter your text',
-                            errorText:
-                                _errorMessage.isNotEmpty ? _errorMessage : null,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.grey
+                                    .withOpacity(0.5), // Shadow color
+                                spreadRadius: 1,
+                                blurRadius: 7,
+                                offset:
+                                    Offset(0, 3), // Changes position of shadow
+                              ),
+                            ],
+                            color: Colors
+                                .white, // Background color for the text field
+                            borderRadius:
+                                BorderRadius.circular(5), // Rounded corners
                           ),
-                          maxLines: 30,
+                          child: Theme(
+                            data: Theme.of(context).copyWith(
+                              textSelectionTheme: TextSelectionThemeData(
+                                selectionColor:
+                                    Colors.grey, // Color of the selected text
+                                cursorColor: Colors
+                                    .grey, // Color of the caret (text cursor)
+                                selectionHandleColor: Colors
+                                    .grey, // Color of the selection handles
+                              ),
+                            ),
+                            child: TextField(
+                              controller: _controller,
+                              focusNode: _focusNode,
+                              onChanged: (value) {
+                                setState(() {
+                                  _textFieldValue = value;
+                                });
+                                saveData(_textFieldValue);
+                              },
+                              decoration: InputDecoration(
+                                labelText: (_focusNode.hasFocus ||
+                                        _textFieldValue.isNotEmpty)
+                                    ? null
+                                    : 'Start translating story',
+                                labelStyle: TextStyle(
+                                    color: Colors
+                                        .grey), // Optional: changes label color to grey
+                                errorText: _errorMessage.isNotEmpty
+                                    ? _errorMessage
+                                    : null,
+                                floatingLabelBehavior:
+                                    FloatingLabelBehavior.always,
+                                border: InputBorder
+                                    .none, // Removes the default border
+                                contentPadding: EdgeInsets.symmetric(
+                                    vertical: 10.0,
+                                    horizontal:
+                                        10.0), // Adjust padding as needed
+                              ),
+                              maxLines:
+                                  30, // Increases the height to accommodate up to 30 lines
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                    ElevatedButton(
-                      onPressed: () {
-                        setState(() {
-                          if (_controller.text.isEmpty) {
-                            _errorMessage = 'Text cannot be empty!';
-                          } else {
-                            _errorMessage = '';
-                            _isMarkedAsDone = true;
-                            saveData(_controller.text);
-                          }
-                        });
-                      },
-                      style: ButtonStyle(
-                        backgroundColor:
-                            MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            if (_controller.text.isEmpty) {
-                              return Colors.grey;
-                            } else if (_isMarkedAsDone) {
-                              return Colors.green;
-                            } else {
-                              return Colors.orange;
-                            }
-                          },
-                        ),
-                      ),
-                      child: Text('Mark as Done'),
                     ),
                   ],
                 ),
