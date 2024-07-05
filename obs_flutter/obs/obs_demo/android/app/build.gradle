@@ -43,6 +43,12 @@ android {
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
+    configurations.all {
+        resolutionStrategy {
+            force "org.jetbrains.kotlin:kotlin-stdlib:1.8.20"
+            force "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.20"
+        }
+    }
 
     buildTypes {
         release {

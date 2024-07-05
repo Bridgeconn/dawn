@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obs_demo/editortext.dart';
+import 'package:obs_demo/screen/audio_record_context.dart';
 import 'package:obs_demo/screen/audio_recorder.dart';
 import 'package:obs_demo/screen/dashboard.dart';
 import 'package:obs_demo/user_profile.dart';
@@ -66,6 +67,7 @@ class _BottomNavigationBarExampleState
       //   style: optionStyle,
       // ),
       AudioRecorder(),
+      AudioRecordContext(),
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -130,6 +132,10 @@ class _BottomNavigationBarExampleState
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.create),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.music_note),
             label: '',
           ),
           BottomNavigationBarItem(

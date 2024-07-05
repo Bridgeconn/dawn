@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:record/record.dart';
 import 'package:permission_handler/permission_handler.dart';
-// import 'package:general_audio_waveforms/general_audio_waveforms.dart';
 
 class AudioRecorder extends StatefulWidget {
   @override
