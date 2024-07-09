@@ -67,7 +67,7 @@ class _BottomNavigationBarExampleState
       //   style: optionStyle,
       // ),
       AudioRecorder(),
-      AudioRecordContext(),
+      AudioRecordContext(rowIndex: 0),
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[

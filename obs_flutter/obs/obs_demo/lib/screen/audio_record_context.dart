@@ -1,37 +1,54 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:audio_waveforms/audio_waveforms.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:obs_demo/screen/story_para.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:obs_demo/utils/chat_bubble.dart';
-// import 'package:flutter_ffmpeg/flutter_ffmpeg.dart';
 
 class AudioRecordContext extends StatefulWidget {
+  const AudioRecordContext({super.key, required this.rowIndex});
+  final int rowIndex;
+
   @override
   _AudioRecordContextState createState() => _AudioRecordContextState();
 }
 
 class _AudioRecordContextState extends State<AudioRecordContext> {
   late final RecorderController recorderController;
-  // final FlutterFFmpeg _flutterFFmpeg = FlutterFFmpeg();
+  late final PlayerController playerController;
   String? path;
-  String? musicFile;
   bool isRecording = false;
   bool isRecordingCompleted = false;
   bool isLoading = true;
   late Directory appDirectory;
 
+  List<Map<String, dynamic>> storyDatas = [];
+  Map<String, dynamic> story = {};
+  late int storyIndex;
+  int paraIndex = 0;
+
+  Future<void> fetchStoryText() async {
+    final jsonString = await rootBundle.loadString('assets/OBSTextData.json');
+    setState(() {
+      storyDatas = json.decode(jsonString).cast<Map<String, dynamic>>();
+      storyIndex = widget.rowIndex;
+    });
+  }
+
   @override
   void initState() {
     _getDir();
+    fetchStoryText();
+    fetchJson();
     _initialiseControllers();
     super.initState();
   }
 
   void _getDir() async {
     appDirectory = await getApplicationDocumentsDirectory();
-    path = "${appDirectory.path}/recording.m4a";
+    String appDocPath = appDirectory.path;
+    path = '$appDocPath/${storyIndex}.${paraIndex}.wav';
     isLoading = false;
     setState(() {});
   }
@@ -43,111 +60,285 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
       ..iosEncoder = IosEncoder.kAudioFormatMPEG4AAC
       ..sampleRate = 24;
     recorderController.bitRate = 48000;
+
+    playerController = PlayerController();
   }
 
-  void _pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
-    if (result != null) {
-      musicFile = result.files.single.path;
-      setState(() {});
-    } else {
-      debugPrint("File not picked");
+  Future<void> deleteRecording() async {
+    final file = File(path!);
+    try {
+      if (await file.exists()) {
+        await file.delete();
+        story['story'][paraIndex].remove('audio');
+        writeJsonToFile(story);
+        print('Recording deleted');
+        print(path!);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Recording deleted successfully')),
+        );
+        setState(() {
+          isRecordingCompleted = false;
+        });
+      } else {
+        print('File does not exist');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('File does not exist')),
+        );
+      }
+    } catch (e) {
+      print('Error deleting file: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error deleting file')),
+      );
     }
   }
 
-  // Future<void> _convertToWav(String inputPath) async {
-  //   final outputPath = inputPath.replaceAll('.m4a', '.wav');
-  //   await _flutterFFmpeg.execute('-i $inputPath $outputPath');
-  //   path = outputPath;
-  //   debugPrint('Converted to WAV: $outputPath');
-  //   setState(() {});
-  // }
+  Future<void> fetchJson() async {
+    Map<String, dynamic> data = await readJsonToFile();
+    if (data.isEmpty) {
+      final obsJson = await rootBundle.loadString('assets/OBSData.json');
+      var obsData = json.decode(obsJson).cast<Map<String, dynamic>>();
+      writeJsonToFile(obsData[storyIndex]);
+      setState(() {
+        story = obsData[storyIndex];
+      });
+    } else {
+      setState(() {
+        story = data;
+      });
+    }
+  }
+
+  Future<Map<String, dynamic>> readJsonToFile() async {
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File('${directory.path}/${storyIndex}.json');
+    // Replace with your desired filename
+    try {
+      final jsonData = await file.readAsString();
+      final data = jsonDecode(jsonData) as Map<String, dynamic>;
+      return data;
+    } on FileSystemException {
+      return <String, dynamic>{};
+    } catch (e) {
+      print("Error reading JSON file: $e");
+      rethrow;
+    }
+  }
+
+  Future<void> writeJsonToFile(Map<String, dynamic> data) async {
+    final directory = await getApplicationDocumentsDirectory();
+    final file = File('${directory.path}/${storyIndex}.json');
+    final jsonData = jsonEncode(data);
+    await file.writeAsString(jsonData);
+  }
+
+  @override
+  void dispose() {
+    recorderController.dispose();
+    playerController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : SafeArea(
-              child: Column(
-                children: [
-                  StoryPara(),
-                  if (isRecordingCompleted)
-                    WaveBubble(
-                      path: path!,
-                      isSender: true,
-                      appDirectory: appDirectory,
-                    ),
-                  const SizedBox(height: 20),
-                  SafeArea(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: isRecording
-                              ? AudioWaveforms(
-                                  enableGesture: true,
-                                  size: Size(
-                                    MediaQuery.of(context).size.width / 2,
-                                    50,
-                                  ),
-                                  recorderController: recorderController,
-                                  waveStyle: const WaveStyle(
-                                    waveColor: Colors.white,
-                                    extendWaveform: true,
-                                    showMiddleLine: false,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12.0),
-                                    color: const Color(0xFF1E1B26),
-                                  ),
-                                  padding: const EdgeInsets.only(left: 18),
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 15),
-                                )
-                              : const Text(""),
-                        ),
-                        if (isRecording)
-                          IconButton(
-                            onPressed: _refreshWave,
-                            icon: const Icon(
-                              Icons.refresh,
-                              color: Colors.black,
-                            ),
-                          ),
-                        const SizedBox(width: 16),
-                        Center(
-                          child: IconButton(
-                            onPressed: _startOrStopRecording,
-                            icon: Icon(isRecording ? Icons.stop : Icons.mic),
-                            color: Colors.black,
-                            iconSize: 28,
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                ],
+    String text =
+        storyDatas[storyIndex]['story'][paraIndex]['url'].split('/').last;
+    return Container(
+      child: Column(
+        children: [
+          Container(
+            width: double.infinity,
+            height: 200,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/$text'),
+                fit: BoxFit.cover,
               ),
             ),
+            child: Container(
+              width: double.infinity,
+              height: 200,
+              padding: const EdgeInsets.all(8),
+              color: const Color(0xF0FDFDFF).withOpacity(0.9),
+              child: Text(
+                storyDatas[storyIndex]['story'][paraIndex]['text'],
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              storyIndex != 0
+                  ? IconButton(
+                      icon: const Icon(Icons.skip_previous),
+                      iconSize: 35,
+                      onPressed: () {
+                        setState(() {
+                          storyIndex = storyIndex > 0 ? storyIndex - 1 : 0;
+                          paraIndex = 0;
+                        });
+                        _getDir();
+                        fetchJson();
+                      },
+                    )
+                  : IconButton(
+                      icon: Icon(Icons.skip_previous),
+                      iconSize: 35,
+                      color: Color.fromARGB(66, 168, 163, 163).withOpacity(0.5),
+                      onPressed: () {},
+                    ),
+              paraIndex != 0
+                  ? IconButton(
+                      icon: Icon(Icons.arrow_left_sharp),
+                      iconSize: 35,
+                      onPressed: () {
+                        setState(() {
+                          paraIndex = paraIndex > 0 ? paraIndex - 1 : 0;
+                        });
+                        _getDir();
+                      },
+                    )
+                  : IconButton(
+                      icon: Icon(Icons.arrow_left_sharp),
+                      iconSize: 35,
+                      color: Color.fromARGB(66, 168, 163, 163).withOpacity(0.5),
+                      onPressed: () {},
+                    ),
+              Text(storyDatas[storyIndex]['storyId'].toString()),
+              const Text(":"),
+              Text(storyDatas[storyIndex]['story'][paraIndex]['id'].toString()),
+              paraIndex != storyDatas[storyIndex]['story'].length - 1
+                  ? IconButton(
+                      icon: Icon(Icons.arrow_right_sharp),
+                      iconSize: 35,
+                      onPressed: () {
+                        setState(() {
+                          paraIndex = paraIndex + 1;
+                        });
+                        _getDir();
+                      },
+                    )
+                  : IconButton(
+                      icon: Icon(Icons.arrow_right_sharp),
+                      iconSize: 35,
+                      color: Colors.black26.withOpacity(0.5),
+                      onPressed: () {},
+                    ),
+              storyIndex != storyDatas.length - 1
+                  ? IconButton(
+                      icon: Icon(Icons.skip_next),
+                      iconSize: 35,
+                      onPressed: () {
+                        setState(() {
+                          storyIndex = storyIndex + 1;
+                          paraIndex = 0;
+                        });
+                        _getDir();
+                        fetchJson();
+                      },
+                    )
+                  : IconButton(
+                      icon: Icon(Icons.skip_next),
+                      iconSize: 35,
+                      color: Color.fromARGB(66, 168, 163, 163).withOpacity(0.5),
+                      onPressed: () {},
+                    ),
+            ],
+          ),
+          if (story['story'][paraIndex]['audio'] != null)
+            WaveBubble(
+              path: story['story'][paraIndex]['audio'],
+              isSender: true,
+              appDirectory: appDirectory,
+            ),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.all(
+              8,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 200),
+                  child: isRecording
+                      ? AudioWaveforms(
+                          enableGesture: true,
+                          size: Size(
+                            MediaQuery.of(context).size.width / 2,
+                            50,
+                          ),
+                          recorderController: recorderController,
+                          waveStyle: const WaveStyle(
+                            waveColor: Colors.white,
+                            extendWaveform: true,
+                            showMiddleLine: false,
+                          ),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(12.0),
+                            color: const Color(0xFF1E1B26),
+                          ),
+                          padding: const EdgeInsets.only(left: 18),
+                          margin: const EdgeInsets.symmetric(horizontal: 15),
+                        )
+                      : const Text(""),
+                ),
+                if (isRecording)
+                  IconButton(
+                    onPressed: _refreshWave,
+                    icon: const Icon(
+                      Icons.refresh,
+                      color: Colors.black,
+                    ),
+                  ),
+                const SizedBox(width: 16),
+                Center(
+                  child: IconButton(
+                    onPressed: () =>
+                        _startOrStopRecording(storyIndex, paraIndex),
+                    icon: Icon(isRecording ? Icons.stop : Icons.mic),
+                    color: Colors.black,
+                    iconSize: 28,
+                  ),
+                ),
+                if (story['story'][paraIndex]['audio'] != null)
+                  IconButton(
+                    onPressed: deleteRecording,
+                    icon: const Icon(
+                      Icons.delete,
+                      color: Colors.black,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  void _startOrStopRecording() async {
+  void _startOrStopRecording(storyNumber, paraNumber) async {
+    // appDirectory = await getApplicationDocumentsDirectory();
+    // String appDocPath = appDirectory.path;
+    // path = '$appDocPath/${storyNumber}.${paraNumber}.wav';
+    isLoading = false;
     try {
       if (isRecording) {
         recorderController.reset();
 
+        print(path);
         path = await recorderController.stop(false);
-
-        if (path != null) {
+        if (path != "") {
           isRecordingCompleted = true;
           debugPrint(path);
-          debugPrint("Recorded file size: ${File(path!).lengthSync()}");
         }
+        story['story'][paraNumber]['audio'] = path;
+        writeJsonToFile(story);
       } else {
         await recorderController.record(path: path); // Path is optional
         setState(() {

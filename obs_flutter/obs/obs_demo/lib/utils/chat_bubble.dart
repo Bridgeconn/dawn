@@ -1,52 +1,8 @@
 import 'dart:async';
 import 'dart:io';
-
-import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-class ChatBubble extends StatelessWidget {
-  final String text;
-  final bool isSender;
-  final bool isLast;
-
-  const ChatBubble({
-    Key? key,
-    required this.text,
-    this.isSender = false,
-    this.isLast = false,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 20, bottom: 10, right: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (isSender) const Spacer(),
-              Container(
-                decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: isSender
-                        ? const Color(0xFF276bfd)
-                        : const Color(0xFF343145)),
-                padding: const EdgeInsets.only(
-                    bottom: 9, top: 8, left: 14, right: 12),
-                child: Text(
-                  text,
-                  style: const TextStyle(color: Colors.white, fontSize: 20),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
+import 'package:audio_waveforms/audio_waveforms.dart';
 
 class WaveBubble extends StatefulWidget {
   final bool isSender;
@@ -127,6 +83,15 @@ class _WaveBubbleState extends State<WaveBubble> {
   }
 
   @override
+  void didUpdateWidget(covariant WaveBubble oldWidget) {
+    if (oldWidget.path != widget.path) {
+      // Path has changed, update controller
+      _preparePlayer();
+    }
+    super.didUpdateWidget(oldWidget);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return widget.path != null || file?.path != null
         ? Align(
@@ -167,6 +132,7 @@ class _WaveBubbleState extends State<WaveBubble> {
                       highlightColor: Colors.transparent,
                     ),
                   AudioFileWaveforms(
+                    key: UniqueKey(), // Ensure a unique key is provided
                     size: Size(MediaQuery.of(context).size.width / 2, 70),
                     playerController: controller,
                     waveformType: widget.index?.isOdd ?? false
