@@ -98,6 +98,7 @@ class _WaveBubbleState extends State<WaveBubble> {
             alignment:
                 widget.isSender ? Alignment.center : Alignment.centerLeft,
             child: Container(
+              width: double.infinity,
               padding: EdgeInsets.only(
                 bottom: 6,
                 right: widget.isSender ? 0 : 10,
@@ -119,7 +120,7 @@ class _WaveBubbleState extends State<WaveBubble> {
                         controller.playerState.isPlaying
                             ? await controller.pausePlayer()
                             : await controller.startPlayer(
-                                finishMode: FinishMode.loop,
+                                finishMode: FinishMode.pause,
                               );
                       },
                       icon: Icon(

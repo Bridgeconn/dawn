@@ -22,11 +22,14 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
   bool isRecordingCompleted = false;
   bool isLoading = true;
   late Directory appDirectory;
+  String _textFieldValue = "";
 
   List<Map<String, dynamic>> storyDatas = [];
   Map<String, dynamic> story = {};
+  FocusNode _focusNode = FocusNode();
   late int storyIndex;
   int paraIndex = 0;
+  final TextEditingController _controller = TextEditingController();
 
   Future<void> fetchStoryText() async {
     final jsonString = await rootBundle.loadString('assets/OBSTextData.json');
@@ -64,13 +67,14 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     playerController = PlayerController();
   }
 
-  Future<void> deleteRecording() async {
-    final file = File(path!);
+  Future<void> deleteRecording(filepath) async {
+    final file = File(filepath!);
     try {
       if (await file.exists()) {
         await file.delete();
         story['story'][paraIndex].remove('audio');
         writeJsonToFile(story);
+
         print('Recording deleted');
         print(path!);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -116,6 +120,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     try {
       final jsonData = await file.readAsString();
       final data = jsonDecode(jsonData) as Map<String, dynamic>;
+      _controller.text = data['story'][0]['text'];
       return data;
     } on FileSystemException {
       return <String, dynamic>{};
@@ -170,151 +175,236 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
               ),
             ),
           ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              storyIndex != 0
-                  ? IconButton(
-                      icon: const Icon(Icons.skip_previous),
-                      iconSize: 35,
-                      onPressed: () {
-                        setState(() {
-                          storyIndex = storyIndex > 0 ? storyIndex - 1 : 0;
-                          paraIndex = 0;
-                        });
-                        _getDir();
-                        fetchJson();
-                      },
-                    )
-                  : IconButton(
-                      icon: Icon(Icons.skip_previous),
-                      iconSize: 35,
-                      color: Color.fromARGB(66, 168, 163, 163).withOpacity(0.5),
-                      onPressed: () {},
-                    ),
-              paraIndex != 0
-                  ? IconButton(
-                      icon: Icon(Icons.arrow_left_sharp),
-                      iconSize: 35,
-                      onPressed: () {
-                        setState(() {
-                          paraIndex = paraIndex > 0 ? paraIndex - 1 : 0;
-                        });
-                        _getDir();
-                      },
-                    )
-                  : IconButton(
-                      icon: Icon(Icons.arrow_left_sharp),
-                      iconSize: 35,
-                      color: Color.fromARGB(66, 168, 163, 163).withOpacity(0.5),
-                      onPressed: () {},
-                    ),
-              Text(storyDatas[storyIndex]['storyId'].toString()),
-              const Text(":"),
-              Text(storyDatas[storyIndex]['story'][paraIndex]['id'].toString()),
-              paraIndex != storyDatas[storyIndex]['story'].length - 1
-                  ? IconButton(
-                      icon: Icon(Icons.arrow_right_sharp),
-                      iconSize: 35,
-                      onPressed: () {
-                        setState(() {
-                          paraIndex = paraIndex + 1;
-                        });
-                        _getDir();
-                      },
-                    )
-                  : IconButton(
-                      icon: Icon(Icons.arrow_right_sharp),
-                      iconSize: 35,
-                      color: Colors.black26.withOpacity(0.5),
-                      onPressed: () {},
-                    ),
-              storyIndex != storyDatas.length - 1
-                  ? IconButton(
-                      icon: Icon(Icons.skip_next),
-                      iconSize: 35,
-                      onPressed: () {
-                        setState(() {
-                          storyIndex = storyIndex + 1;
-                          paraIndex = 0;
-                        });
-                        _getDir();
-                        fetchJson();
-                      },
-                    )
-                  : IconButton(
-                      icon: Icon(Icons.skip_next),
-                      iconSize: 35,
-                      color: Color.fromARGB(66, 168, 163, 163).withOpacity(0.5),
-                      onPressed: () {},
-                    ),
-            ],
-          ),
-          if (story['story'][paraIndex]['audio'] != null)
-            WaveBubble(
-              path: story['story'][paraIndex]['audio'],
-              isSender: true,
-              appDirectory: appDirectory,
-            ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.all(
-              8,
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: isRecording
-                      ? AudioWaveforms(
-                          enableGesture: true,
-                          size: Size(
-                            MediaQuery.of(context).size.width / 2,
-                            50,
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      storyIndex != 0
+                          ? IconButton(
+                              icon: const Icon(Icons.skip_previous),
+                              iconSize: 35,
+                              onPressed: () {
+                                setState(() {
+                                  storyIndex =
+                                      storyIndex > 0 ? storyIndex - 1 : 0;
+                                  paraIndex = 0;
+                                });
+                                _getDir();
+                                fetchJson();
+                              },
+                            )
+                          : IconButton(
+                              icon: Icon(Icons.skip_previous),
+                              iconSize: 35,
+                              color: Color.fromARGB(66, 168, 163, 163)
+                                  .withOpacity(0.5),
+                              onPressed: () {},
+                            ),
+                      paraIndex != 0
+                          ? IconButton(
+                              icon: Icon(Icons.arrow_left_sharp),
+                              iconSize: 35,
+                              onPressed: () {
+                                setState(() {
+                                  paraIndex = paraIndex > 0 ? paraIndex - 1 : 0;
+                                });
+                                _getDir();
+                                _controller.text =
+                                    story['story'][paraIndex]['text'];
+                              },
+                            )
+                          : IconButton(
+                              icon: Icon(Icons.arrow_left_sharp),
+                              iconSize: 35,
+                              color: Color.fromARGB(66, 168, 163, 163)
+                                  .withOpacity(0.5),
+                              onPressed: () {},
+                            ),
+                      Text(storyDatas[storyIndex]['storyId'].toString()),
+                      const Text(":"),
+                      Text(storyDatas[storyIndex]['story'][paraIndex]['id']
+                          .toString()),
+                      paraIndex != storyDatas[storyIndex]['story'].length - 1
+                          ? IconButton(
+                              icon: Icon(Icons.arrow_right_sharp),
+                              iconSize: 35,
+                              onPressed: () {
+                                setState(() {
+                                  paraIndex = paraIndex + 1;
+                                });
+                                _getDir();
+                                _controller.text =
+                                    story?['story']?[paraIndex]['text'];
+                              },
+                            )
+                          : IconButton(
+                              icon: Icon(Icons.arrow_right_sharp),
+                              iconSize: 35,
+                              color: Colors.black26.withOpacity(0.5),
+                              onPressed: () {},
+                            ),
+                      storyIndex != storyDatas.length - 1
+                          ? IconButton(
+                              icon: Icon(Icons.skip_next),
+                              iconSize: 35,
+                              onPressed: () {
+                                setState(() {
+                                  storyIndex = storyIndex + 1;
+                                  paraIndex = 0;
+                                });
+                                _getDir();
+                                fetchJson();
+                              },
+                            )
+                          : IconButton(
+                              icon: Icon(Icons.skip_next),
+                              iconSize: 35,
+                              color: Color.fromARGB(66, 168, 163, 163)
+                                  .withOpacity(0.5),
+                              onPressed: () {},
+                            ),
+                    ],
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(4.0),
+                    child: SizedBox(
+                      height: 200,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          boxShadow: [
+                            BoxShadow(
+                              color:
+                                  Colors.grey.withOpacity(0.5), // Shadow color
+                              spreadRadius: 1,
+                              blurRadius: 7,
+                              offset:
+                                  Offset(0, 3), // Changes position of shadow
+                            ),
+                          ],
+                          color: Colors
+                              .white, // Background color for the text field
+                          borderRadius:
+                              BorderRadius.circular(5), // Rounded corners
+                        ),
+                        child: Theme(
+                          data: Theme.of(context).copyWith(
+                            textSelectionTheme: TextSelectionThemeData(
+                              selectionColor:
+                                  Colors.grey, // Color of the selected text
+                              cursorColor: Colors
+                                  .grey, // Color of the caret (text cursor)
+                              selectionHandleColor:
+                                  Colors.grey, // Color of the selection handles
+                            ),
                           ),
-                          recorderController: recorderController,
-                          waveStyle: const WaveStyle(
-                            waveColor: Colors.white,
-                            extendWaveform: true,
-                            showMiddleLine: false,
+                          child: TextField(
+                            controller: _controller,
+                            focusNode: _focusNode,
+                            onChanged: (value) {
+                              setState(() {
+                                _textFieldValue = value;
+                              });
+                            },
+                            enabled: false,
+                            decoration: InputDecoration(
+                              labelText: (_focusNode.hasFocus ||
+                                      _textFieldValue.isNotEmpty)
+                                  ? null
+                                  : 'Start translating story',
+                              labelStyle: TextStyle(
+                                  color: Colors
+                                      .grey), // Optional: changes label color to grey
+
+                              floatingLabelBehavior:
+                                  FloatingLabelBehavior.always,
+                              border: InputBorder
+                                  .none, // Removes the default border
+                              contentPadding: EdgeInsets.symmetric(
+                                  vertical: 10.0,
+                                  horizontal: 10.0), // Adjust padding as needed
+                            ),
+                            maxLines:
+                                30, // Increases the height to accommodate up to 30 lines
                           ),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(12.0),
-                            color: const Color(0xFF1E1B26),
-                          ),
-                          padding: const EdgeInsets.only(left: 18),
-                          margin: const EdgeInsets.symmetric(horizontal: 15),
-                        )
-                      : const Text(""),
-                ),
-                if (isRecording)
-                  IconButton(
-                    onPressed: _refreshWave,
-                    icon: const Icon(
-                      Icons.refresh,
-                      color: Colors.black,
+                        ),
+                      ),
                     ),
                   ),
-                const SizedBox(width: 16),
-                Center(
-                  child: IconButton(
-                    onPressed: () =>
-                        _startOrStopRecording(storyIndex, paraIndex),
-                    icon: Icon(isRecording ? Icons.stop : Icons.mic),
-                    color: Colors.black,
-                    iconSize: 28,
-                  ),
-                ),
-                if (story['story'][paraIndex]['audio'] != null)
-                  IconButton(
-                    onPressed: deleteRecording,
-                    icon: const Icon(
-                      Icons.delete,
-                      color: Colors.black,
+                  if (story['story'][paraIndex]['audio'] != null)
+                    WaveBubble(
+                      path: story['story'][paraIndex]['audio'],
+                      isSender: true,
+                      appDirectory: appDirectory,
+                    ),
+                  const SizedBox(height: 20),
+                  Padding(
+                    padding: const EdgeInsets.all(
+                      8,
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          child: isRecording
+                              ? AudioWaveforms(
+                                  enableGesture: true,
+                                  size: Size(
+                                    MediaQuery.of(context).size.width / 2,
+                                    50,
+                                  ),
+                                  recorderController: recorderController,
+                                  waveStyle: const WaveStyle(
+                                    waveColor: Colors.white,
+                                    extendWaveform: true,
+                                    showMiddleLine: false,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(12.0),
+                                    color: const Color(0xFF1E1B26),
+                                  ),
+                                  padding: const EdgeInsets.only(left: 18),
+                                  margin: const EdgeInsets.symmetric(
+                                      horizontal: 15),
+                                )
+                              : const Text(""),
+                        ),
+                        if (isRecording)
+                          IconButton(
+                            onPressed: _refreshWave,
+                            icon: const Icon(
+                              Icons.refresh,
+                              color: Colors.black,
+                            ),
+                          ),
+                        const SizedBox(width: 16),
+                        if (story['story'][paraIndex]['audio'] == null)
+                          Center(
+                            child: IconButton(
+                              onPressed: () =>
+                                  _startOrStopRecording(storyIndex, paraIndex),
+                              icon: Icon(isRecording ? Icons.stop : Icons.mic),
+                              color: Colors.black,
+                              iconSize: 28,
+                            ),
+                          ),
+                        if (story['story'][paraIndex]['audio'] != null)
+                          IconButton(
+                            onPressed: () => deleteRecording(
+                                story['story'][paraIndex]['audio']),
+                            icon: const Icon(
+                              Icons.delete,
+                              color: Colors.black,
+                            ),
+                          ),
+                      ],
                     ),
                   ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -323,16 +413,13 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
   }
 
   void _startOrStopRecording(storyNumber, paraNumber) async {
-    // appDirectory = await getApplicationDocumentsDirectory();
-    // String appDocPath = appDirectory.path;
-    // path = '$appDocPath/${storyNumber}.${paraNumber}.wav';
     isLoading = false;
     try {
       if (isRecording) {
-        recorderController.reset();
-
         print(path);
         path = await recorderController.stop(false);
+        recorderController.reset();
+
         if (path != "") {
           isRecordingCompleted = true;
           debugPrint(path);
