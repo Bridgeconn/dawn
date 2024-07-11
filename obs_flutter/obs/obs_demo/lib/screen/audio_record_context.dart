@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:obs_demo/utils/chat_bubble.dart';
 
@@ -19,6 +20,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
   late final PlayerController playerController;
   String? path;
   bool isRecording = false;
+  bool isPaused = false;
   bool isRecordingCompleted = false;
   bool isLoading = true;
   late Directory appDirectory;
@@ -335,73 +337,69 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
                   ),
                   if (story['story'][paraIndex]['audio'] != null)
                     WaveBubble(
-                      path: story['story'][paraIndex]['audio'],
-                      isSender: true,
-                      appDirectory: appDirectory,
-                    ),
-                  const SizedBox(height: 20),
-                  Padding(
-                    padding: const EdgeInsets.all(
-                      8,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 200),
-                          child: isRecording
-                              ? AudioWaveforms(
-                                  enableGesture: true,
-                                  size: Size(
-                                    MediaQuery.of(context).size.width / 2,
-                                    50,
-                                  ),
-                                  recorderController: recorderController,
-                                  waveStyle: const WaveStyle(
-                                    waveColor: Colors.white,
-                                    extendWaveform: true,
-                                    showMiddleLine: false,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12.0),
-                                    color: const Color(0xFF1E1B26),
-                                  ),
-                                  padding: const EdgeInsets.only(left: 18),
-                                  margin: const EdgeInsets.symmetric(
-                                      horizontal: 15),
-                                )
-                              : const Text(""),
+                        path: story['story'][paraIndex]['audio'],
+                        isSender: true,
+                        appDirectory: appDirectory,
+                        deleteRecording: deleteRecording),
+                  if (!isRecording &&
+                      story['story'][paraIndex]['audio'] == null)
+                    WaveBubble(
+                        path: '',
+                        isSender: false,
+                        appDirectory: appDirectory,
+                        deleteRecording: deleteRecording),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 200),
+                        child: isRecording
+                            ? AudioWaveforms(
+                                enableGesture: true,
+                                size: Size(
+                                  MediaQuery.of(context).size.width / 2,
+                                  50,
+                                ),
+                                recorderController: recorderController,
+                                waveStyle: const WaveStyle(
+                                  waveColor: Colors.white,
+                                  extendWaveform: true,
+                                  showMiddleLine: false,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12.0),
+                                  color: const Color(0xFF1E1B26),
+                                ),
+                              )
+                            : const Text(""),
+                      ),
+                      if (story['story'][paraIndex]['audio'] == null)
+                        Center(
+                          child: IconButton(
+                            onPressed: () =>
+                                _startOrStopRecording(storyIndex, paraIndex),
+                            icon: Icon(isRecording ? Icons.stop : Icons.mic),
+                            color: Colors.black,
+                            iconSize: 28,
+                          ),
                         ),
-                        if (isRecording)
-                          IconButton(
-                            onPressed: _refreshWave,
-                            icon: const Icon(
-                              Icons.refresh,
-                              color: Colors.black,
-                            ),
+                      if (isRecording && !isPaused)
+                        IconButton(
+                          onPressed: _pauseRecording,
+                          icon: const Icon(
+                            Icons.pause,
+                            color: Colors.black,
                           ),
-                        const SizedBox(width: 16),
-                        if (story['story'][paraIndex]['audio'] == null)
-                          Center(
-                            child: IconButton(
-                              onPressed: () =>
-                                  _startOrStopRecording(storyIndex, paraIndex),
-                              icon: Icon(isRecording ? Icons.stop : Icons.mic),
-                              color: Colors.black,
-                              iconSize: 28,
-                            ),
+                        ),
+                      if (isPaused)
+                        IconButton(
+                          onPressed: _resumeRecording,
+                          icon: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.black,
                           ),
-                        if (story['story'][paraIndex]['audio'] != null)
-                          IconButton(
-                            onPressed: () => deleteRecording(
-                                story['story'][paraIndex]['audio']),
-                            icon: const Icon(
-                              Icons.delete,
-                              color: Colors.black,
-                            ),
-                          ),
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
                 ],
               ),
@@ -417,7 +415,10 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     try {
       if (isRecording) {
         print(path);
-        path = await recorderController.stop(false);
+        path = await recorderController.stop();
+        setState(() {
+          isPaused = false;
+        });
         recorderController.reset();
 
         if (path != "") {
@@ -438,6 +439,28 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
       setState(() {
         isRecording = !isRecording;
       });
+    }
+  }
+
+  void _pauseRecording() async {
+    try {
+      await recorderController.pause();
+      setState(() {
+        isPaused = true;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
+    }
+  }
+
+  void _resumeRecording() async {
+    try {
+      await recorderController.record();
+      setState(() {
+        isPaused = false;
+      });
+    } catch (e) {
+      debugPrint(e.toString());
     }
   }
 

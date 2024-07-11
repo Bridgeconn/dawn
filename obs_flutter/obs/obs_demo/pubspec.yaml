@@ -43,7 +43,6 @@ dependencies:
   audio_waveforms: ^1.0.5
   file_picker: ^5.0.0
   flutter_ffmpeg: ^0.4.2
-  shared_preferences: ^2.2.3
 
 dev_dependencies:
   flutter_test:

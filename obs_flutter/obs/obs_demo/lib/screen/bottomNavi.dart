@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obs_demo/editortext.dart';
 import 'package:obs_demo/screen/audio_record_context.dart';
-import 'package:obs_demo/screen/audio_recorder.dart';
 import 'package:obs_demo/screen/dashboard.dart';
 import 'package:obs_demo/user_profile.dart';
 
@@ -62,11 +61,6 @@ class _BottomNavigationBarExampleState
         rowIndex: 0,
         onUpdateTextAvailability: onUpdateTextAvailability,
       ),
-      // Text(
-      //   'Audio',
-      //   style: optionStyle,
-      // ),
-      AudioRecorder(),
       AudioRecordContext(rowIndex: 0),
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -135,11 +129,7 @@ class _BottomNavigationBarExampleState
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.music_note),
-            label: '',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.volume_up),
+            icon: Icon(Icons.mic),
             label: '',
           ),
           BottomNavigationBarItem(
