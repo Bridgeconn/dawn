@@ -61,6 +61,10 @@ class _BottomNavigationBarExampleState
         rowIndex: 0,
         onUpdateTextAvailability: onUpdateTextAvailability,
       ),
+      // Text(
+      //   'Audio',
+      //   style: optionStyle,
+      // ),
       AudioRecordContext(rowIndex: 0),
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -129,7 +133,7 @@ class _BottomNavigationBarExampleState
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.mic),
+            icon: Icon(Icons.volume_up),
             label: '',
           ),
           BottomNavigationBarItem(

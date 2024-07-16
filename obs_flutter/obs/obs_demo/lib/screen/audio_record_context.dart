@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:obs_demo/utils/chat_bubble.dart';
 
@@ -23,6 +22,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
   bool isPaused = false;
   bool isRecordingCompleted = false;
   bool isLoading = true;
+  bool isPlaying = false;
   late Directory appDirectory;
   String _textFieldValue = "";
 
@@ -146,6 +146,21 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     super.dispose();
   }
 
+  void _playAudio(audioPath) {
+    // Ensure to provide the correct path to your audio file
+    playerController.preparePlayer(path: audioPath);
+
+    setState(() {
+      isPlaying = true;
+    });
+    playerController.startPlayer(
+      finishMode: FinishMode.pause,
+    );
+    setState(() {
+      isPlaying = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     String text =
@@ -164,18 +179,38 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
               ),
             ),
             child: Container(
-              width: double.infinity,
-              height: 200,
-              padding: const EdgeInsets.all(8),
-              color: const Color(0xF0FDFDFF).withOpacity(0.9),
-              child: Text(
-                storyDatas[storyIndex]['story'][paraIndex]['text'],
-                style: const TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+                width: double.infinity,
+                height: 200,
+                padding: const EdgeInsets.all(8),
+                color: const Color(0xF0FDFDFF).withOpacity(0.9),
+                child: Column(
+                  children: [
+                    Text(
+                      storyDatas[storyIndex]['story'][paraIndex]['text'],
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    isPlaying
+                        ? IconButton(
+                            onPressed: () => {},
+                            // _playAudio(story['story'][paraIndex]['audio']),
+                            icon: const Icon(
+                              Icons.stop,
+                              color: Colors.black,
+                            ),
+                          )
+                        : IconButton(
+                            onPressed: () =>
+                                _playAudio(story['story'][paraIndex]['audio']),
+                            icon: const Icon(
+                              Icons.play_arrow,
+                              color: Colors.black,
+                            ),
+                          ),
+                  ],
+                )),
           ),
           Expanded(
             child: SingleChildScrollView(
