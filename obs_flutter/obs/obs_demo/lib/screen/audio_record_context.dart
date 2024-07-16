@@ -15,6 +15,7 @@ class AudioRecordContext extends StatefulWidget {
 }
 
 class _AudioRecordContextState extends State<AudioRecordContext> {
+  //global variables
   late final RecorderController recorderController;
   late final PlayerController playerController;
   String? path;
@@ -32,7 +33,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
   late int storyIndex;
   int paraIndex = 0;
   final TextEditingController _controller = TextEditingController();
-
+// this function for  fetching the story data  from  the json
   Future<void> fetchStoryText() async {
     final jsonString = await rootBundle.loadString('assets/OBSTextData.json');
     setState(() {
@@ -50,6 +51,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     super.initState();
   }
 
+//initiaize the directory
   void _getDir() async {
     appDirectory = await getApplicationDocumentsDirectory();
     String appDocPath = appDirectory.path;
@@ -58,6 +60,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     setState(() {});
   }
 
+//initiaize controllerss value
   void _initialiseControllers() {
     recorderController = RecorderController()
       ..androidEncoder = AndroidEncoder.aac
@@ -69,6 +72,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     playerController = PlayerController();
   }
 
+// for deleting the recording from the device path and also from  the json
   Future<void> deleteRecording(filepath) async {
     final file = File(filepath!);
     try {
@@ -99,6 +103,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     }
   }
 
+//fetching the json data also writing the data
   Future<void> fetchJson() async {
     Map<String, dynamic> data = await readJsonToFile();
     if (data.isEmpty) {
@@ -115,6 +120,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     }
   }
 
+//reading the json file
   Future<Map<String, dynamic>> readJsonToFile() async {
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/${storyIndex}.json');
@@ -132,6 +138,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     }
   }
 
+//writting into the json file
   Future<void> writeJsonToFile(Map<String, dynamic> data) async {
     final directory = await getApplicationDocumentsDirectory();
     final file = File('${directory.path}/${storyIndex}.json');
@@ -146,6 +153,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     super.dispose();
   }
 
+//playing the audio through the path
   void _playAudio(audioPath) {
     // Ensure to provide the correct path to your audio file
     playerController.preparePlayer(path: audioPath);
@@ -370,6 +378,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
                       ),
                     ),
                   ),
+                  //for audio waves
                   if (story['story'][paraIndex]['audio'] != null)
                     WaveBubble(
                         path: story['story'][paraIndex]['audio'],
@@ -408,6 +417,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
                               )
                             : const Text(""),
                       ),
+                      //start and stop recording
                       if (story['story'][paraIndex]['audio'] == null)
                         Center(
                           child: IconButton(
@@ -418,6 +428,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
                             iconSize: 28,
                           ),
                         ),
+                      //pause reording
                       if (isRecording && !isPaused)
                         IconButton(
                           onPressed: _pauseRecording,
@@ -426,6 +437,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
                             color: Colors.black,
                           ),
                         ),
+                      //resume recording
                       if (isPaused)
                         IconButton(
                           onPressed: _resumeRecording,
@@ -445,6 +457,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     );
   }
 
+// this function work for start and stop recording
   void _startOrStopRecording(storyNumber, paraNumber) async {
     isLoading = false;
     try {
@@ -477,6 +490,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     }
   }
 
+// this function work for paue recording
   void _pauseRecording() async {
     try {
       await recorderController.pause();
@@ -487,6 +501,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
       debugPrint(e.toString());
     }
   }
+// this function work for resume recording
 
   void _resumeRecording() async {
     try {
@@ -499,6 +514,7 @@ class _AudioRecordContextState extends State<AudioRecordContext> {
     }
   }
 
+//refresh the waves
   void _refreshWave() {
     if (isRecording) recorderController.refresh();
   }

@@ -65,6 +65,7 @@ class _BottomNavigationBarExampleState
       //   'Audio',
       //   style: optionStyle,
       // ),
+      //call the audio recorder here
       AudioRecordContext(rowIndex: 0),
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -132,6 +133,7 @@ class _BottomNavigationBarExampleState
             icon: Icon(Icons.create),
             label: '',
           ),
+          //added the icon for audio recorder
           BottomNavigationBarItem(
             icon: Icon(Icons.volume_up),
             label: '',
