@@ -67,7 +67,6 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
       final jsonData = await file.readAsString();
       final data = jsonDecode(jsonData) as Map<String, dynamic>;
       _controller.text = data['story'][0]['text'];
-      data['story'][0]['isEmpty'] = false;
       return data;
     } on FileSystemException {
       return <String, dynamic>{};
@@ -315,7 +314,6 @@ class _EditorTextLayoutState extends State<EditorTextLayout> {
 
   void saveData(String value) async {
     story['story'][paraIndex]['text'] = value;
-    story['story'][paraIndex]['isEmpty'] = value.isEmpty;
     writeJsonToFile(story);
     widget.onUpdateTextAvailability(value.isNotEmpty);
     print('Data saved: $value');

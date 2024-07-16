@@ -37,6 +37,12 @@ dependencies:
 
   http: ^0.13.3
   path_provider: ^2.0.2
+  audioplayers: ^4.1.0
+  record: ^4.4.4
+  permission_handler: ^11.3.1
+  audio_waveforms: ^1.0.5
+  file_picker: ^5.0.0
+  flutter_ffmpeg: ^0.4.2
 
 dev_dependencies:
   flutter_test:

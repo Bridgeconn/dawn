@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:obs_demo/editortext.dart';
+import 'package:obs_demo/screen/audio_record_context.dart';
 import 'package:obs_demo/screen/dashboard.dart';
 import 'package:obs_demo/user_profile.dart';
 
@@ -64,6 +65,8 @@ class _BottomNavigationBarExampleState
       //   'Audio',
       //   style: optionStyle,
       // ),
+      //call the audio recorder here
+      AudioRecordContext(rowIndex: 0),
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
@@ -130,10 +133,11 @@ class _BottomNavigationBarExampleState
             icon: Icon(Icons.create),
             label: '',
           ),
-          // BottomNavigationBarItem(
-          //   icon: Icon(Icons.audiotrack_outlined),
-          //   label: 'Audio',
-          // ),
+          //added the icon for audio recorder
+          BottomNavigationBarItem(
+            icon: Icon(Icons.volume_up),
+            label: '',
+          ),
           BottomNavigationBarItem(
             icon: Icon(Icons.menu),
             label: '',
